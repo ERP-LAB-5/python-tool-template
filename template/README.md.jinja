@@ -1,0 +1,154 @@
+# {{ tool_name }}
+
+**v0.1.0** · GPL-3.0 · [releases](https://github.com/{{ github_org }}/{{ repo_name }}/releases)
+
+{{ description }}.
+{%- if disclaimer %}
+
+> **{{ disclaimer }}**
+{%- endif %}
+
+<!-- Generated from the D-LAB-5 tool template. Rewrite the parts about notes;
+     keep the install, update and agent sections accurate. scripts/release.py
+     updates every v-pin in this file. -->
+
+## Use it
+
+```bash
+./run.sh                 # http://127.0.0.1:{{ port }}{% if with_windows %} (run.cmd or run.ps1 on Windows){% endif %}
+./run.sh --port 9000     # somewhere else
+./run.sh --stop          # shut it down
+```
+
+The first run creates `.venv` and installs the requirements. Any other option
+goes straight to the app, e.g. `./run.sh --no-update-check`.
+
+The header has **About**, which shows the installed version, checks github.com
+for a newer one and links to the repository. On a pip or pipx install it can
+**update itself**: it runs pip against the latest tag, shows what pip said, and
+restarts into the new version only if that worked. From a source checkout it
+tells you to `git pull` instead. The check is one request for a text file. It
+sends nothing about you, is cached for six hours, and is skipped silently when
+there is no network. `--no-update-check` turns it off. **Restart** and **Stop**
+are only accepted from this machine.
+{%- if with_workspace %}
+
+Notes live in two folders: `{{ workspace_dir }}/` for your own, which git
+ignores and which follows the working directory, and the samples that ship
+inside the package. A save goes back to the folder the note came from.
+{%- endif %}
+
+## Installing without a clone
+
+**A release tarball**: needs neither git nor pip.
+
+```bash
+curl -L https://github.com/{{ github_org }}/{{ repo_name }}/archive/refs/tags/v0.1.0.tar.gz | tar xz
+cd {{ repo_name }}-0.1.0
+./run.sh
+```
+
+**Or install it**, with no source tree to keep:
+
+```bash
+pipx install git+https://github.com/{{ github_org }}/{{ repo_name }}@v0.1.0
+{{ cli_command }}-web                 # the page
+{{ cli_command }} summarise note.json # the command line
+{%- if with_mcp %}
+{{ cli_command }}-mcp                 # the MCP server, for agents
+{%- endif %}
+{{ cli_command }}-skill --install     # the agent skill, into ~/.claude/skills
+```
+
+Every command has a `python3 -m` twin that needs nothing on PATH:
+
+| command | the same thing as a module |
+|---|---|
+| `{{ cli_command }}` | `python3 -m {{ package_name }}.{{ cli_module }}` |
+| `{{ cli_command }}-web` | `python3 -m {{ package_name }}.app` |
+{%- if with_mcp %}
+| `{{ cli_command }}-mcp` | `python3 -m {{ package_name }}.mcp_server` |
+{%- endif %}
+| `{{ cli_command }}-skill` | `python3 -m {{ package_name }}.core.skill_install` |
+
+## Updating an install
+
+**From the page:** *About → Update and restart*.
+
+**From the command line**, name the new tag. `--upgrade` alone will not move a
+pinned tag:
+
+```bash
+pip install --upgrade git+https://github.com/{{ github_org }}/{{ repo_name }}@v0.1.0
+pipx install --force git+https://github.com/{{ github_org }}/{{ repo_name }}@v0.1.0
+```
+
+If you copied the skill with `--install`, refresh it afterwards:
+`{{ cli_command }}-skill --install --force`.
+
+## For agents
+{%- if with_plugin %}
+
+**As a Claude Code plugin** you get the skill{% if with_mcp %} and the MCP server{% endif %} in one step:
+
+```
+/plugin marketplace add ERP-LAB-5/python-tool-template
+/plugin install {{ tool_name }}@erp-lab-5
+```
+{%- if with_mcp %}
+
+On first use the plugin installs the version it pins into its own venv under
+`~/.local/share/dlab5-tools/{{ tool_name }}/` and runs the MCP server from there.
+It needs `python3` on PATH.
+{%- endif %}
+{%- endif %}
+{%- if with_mcp %}
+
+**From a checkout**, `.mcp.json` registers the MCP server for this repository.
+Point another agent at it with:
+
+```json
+{"mcpServers": {"{{ tool_name }}": {
+  "command": "/path/to/{{ repo_name }}/.venv/bin/python",
+  "args": ["-m", "{{ package_name }}.mcp_server"]}}}
+```
+
+The MCP server starts the web server if it is not running, and both work on the
+same files, so an agent's save shows up for the person at the browser.
+{%- endif %}
+
+[**The skill**]({{ package_name }}/skill/SKILL.md) ships inside the package.
+`{{ cli_command }}-skill --install` copies it to `~/.claude/skills` for agents
+that don't use the plugin. A checkout has identical copies in
+`.claude/skills/{{ tool_name }}/`{% if with_plugin %} and `plugin/skills/{{ tool_name }}/`{% endif %}. They are
+real files rather than symlinks, because symlinks don't survive a clone on
+Windows. `{{ cli_command }}-skill --check` confirms they are in step, and
+`--sync` rewrites them from the packaged copy.
+
+## Development
+
+```bash
+./test.sh                # the suite, with ROS 2's PYTHONPATH kept out of it
+```
+
+This repository was generated from
+[ERP-LAB-5/python-tool-template](https://github.com/ERP-LAB-5/python-tool-template).
+`{{ package_name }}/core/`, the launchers, `test.sh`, `tests/test_core.py`{% if with_release %},
+`scripts/release.py`{% endif %}{% if with_plugin and with_mcp %} and `plugin/bin/launch_mcp.py`{% endif %} belong to the template. Take its fixes with
+`copier update` rather than editing them here. Everything else belongs to this tool.
+{%- if with_release %}
+
+Releasing:
+
+```bash
+python3 scripts/release.py 0.2.0 -F notes.txt --push
+```
+
+It bumps `VERSION` everywhere it appears, updates this README's pins, syncs the
+skill copies, commits, tags, pushes, and creates the GitHub release.
+{%- endif %}
+
+## Licence
+
+GPL-3.0-or-later. © {{ copyright_year }} {{ author }} — *Twin. Experiment. Automate.*
+See [LICENSE](LICENSE).

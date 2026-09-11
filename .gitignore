@@ -1,0 +1,7 @@
+__pycache__/
+*.py[co]
+.venv/
+.idea/
+.pytest_cache/
+# scratch — never committed
+temp/

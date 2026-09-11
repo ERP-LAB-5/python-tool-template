@@ -1,0 +1,4 @@
+flask>=3.0
+{% if with_mcp %}# only mcp_server.py needs it (agent access); the page itself needs Flask alone
+mcp>=2,<3
+{% endif %}

@@ -1,0 +1,54 @@
+# Every change to the template reaches every tool through `copier update`, so
+# the template is tested by rendering it and using the result.
+name: template
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: copier
+        run: pipx install copier
+      - name: render, test, install, run, MCP, update round trip
+        run: COPIER="$(command -v copier)" ./test.sh
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: render every option on
+        shell: pwsh
+        run: |
+          pipx install copier
+          copier copy --trust --defaults --data-file tests/answers-all-on.yml --data port=18790 . ../sample
+      - name: its own tests
+        shell: pwsh
+        working-directory: ../sample
+        run: |
+          python -m venv .venv
+          .venv\Scripts\python -m pip install --quiet -r requirements.txt -r requirements-dev.txt
+          $env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = "1"
+          .venv\Scripts\python -m pytest -q tests/
+      - name: run.ps1 starts, answers and stops
+        shell: pwsh
+        working-directory: ../sample
+        run: |
+          .\run.ps1 -NoBrowser --no-update-check
+          Invoke-RestMethod http://127.0.0.1:18790/api/health
+          .\run.ps1 -Stop

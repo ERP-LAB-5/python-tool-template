@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    {{ tool_name | tojson }}: {
+      "command": ".venv/bin/python",
+      "args": ["-m", "{{ package_name }}.mcp_server"],
+      "env": {}
+    }
+  }
+}

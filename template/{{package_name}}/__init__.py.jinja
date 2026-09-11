@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) {{ copyright_year }} {{ author }}
+"""{{ tool_name }} — {{ description }}
+
+    {{ cli_module }}      the engine and its command line, standard library only
+    app         the browser front end (Flask), on top of core.server
+{%- if with_mcp %}
+    mcp_server  MCP tools over stdio, talking to the same web server
+{%- endif %}
+    core/       shared with every D-LAB-5 tool; `copier update` maintains it
+
+Keeping everything in a package rather than loose at the repository root is
+what lets `pip install` carry the templates, static files, VERSION and the
+agent skill along.
+"""
+
+from .core.identity import REPO_URL  # noqa: F401
+from .core.version import __version__  # noqa: F401

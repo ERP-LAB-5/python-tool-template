@@ -1,0 +1,9 @@
+# Every option on: the shape of metro-map-tool.
+tool_name: sample-full
+title: Sample full
+description: Every template option switched on
+with_mcp: true
+with_windows: true
+with_workspace: true
+with_release: true
+with_plugin: true

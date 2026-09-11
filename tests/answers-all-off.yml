@@ -1,0 +1,14 @@
+# Every option off, with a disclaimer and a shared repository name and a
+# non-default CLI: nearer the shape of sap-di-tools.
+tool_name: sample-bare
+repo_name: sample-tools
+cli_command: sb
+cli_module: sbcore
+title: Sample bare
+description: Every template option switched off
+disclaimer: Unofficial. Not affiliated with anyone.
+with_mcp: false
+with_windows: false
+with_workspace: false
+with_release: false
+with_plugin: false

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) {{ copyright_year }} {{ author }}
+"""
+identity.py — who this tool is, as far as the core needs to know.
+
+Generated from .copier-answers.yml by the D-LAB-5 tool template. Change the
+answer and run `copier update` rather than editing this file: it is core-owned,
+and every other module under core/ reads its names from here so that those
+modules come out byte-identical in every tool.
+"""
+
+TOOL_NAME = {{ tool_name | tojson }}
+PACKAGE = {{ package_name | tojson }}
+TITLE = {{ title | tojson }}
+DESCRIPTION = {{ description | tojson }}
+AUTHOR = {{ author | tojson }}
+COPYRIGHT = "© {{ copyright_year }} {{ author }}"
+LICENCE = "GPL-3.0-or-later"
+LICENCE_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
+DISCLAIMER = {{ disclaimer | tojson }}
+COFFEE_URL = {{ coffee_url | tojson }}
+
+GITHUB_ORG = {{ github_org | tojson }}
+REPO_NAME = {{ repo_name | tojson }}
+REPO_URL = f"https://github.com/{GITHUB_ORG}/{REPO_NAME}"
+DEFAULT_BRANCH = {{ default_branch | tojson }}
+
+DEFAULT_PORT = {{ port }}
+
+CLI_COMMAND = {{ cli_command | tojson }}
+CLI_MODULE = {{ cli_module | tojson }}
+WEB_COMMAND = {{ (cli_command ~ "-web") | tojson }}
+MCP_COMMAND = {{ (cli_command ~ "-mcp") | tojson }}
+SKILL_COMMAND = {{ (cli_command ~ "-skill") | tojson }}
+SKILL_NAME = {{ tool_name | tojson }}
+
+WITH_MCP = {{ with_mcp }}
+WITH_WORKSPACE = {{ with_workspace }}
+WITH_PLUGIN = {{ with_plugin }}
+WORKSPACE_DIR = {{ (workspace_dir if with_workspace else "") | tojson }}
+SHARED_DIR = {{ (shared_dir if with_workspace else "") | tojson }}

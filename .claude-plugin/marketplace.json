@@ -1,0 +1,31 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "erp-lab-5",
+  "owner": {
+    "name": "D-LAB-5"
+  },
+  "description": "ERP-LAB-5 agent plugins: the kit for building D-LAB-5 Python tools, and the tools built with it.",
+  "plugins": [
+    {
+      "name": "pytool-kit",
+      "source": "./plugin",
+      "description": "Build D-LAB-5 small full-stack Python tools with agents: scaffold, extend, update the core, release.",
+      "version": "0.1.0",
+      "author": { "name": "D-LAB-5" },
+      "category": "development",
+      "keywords": ["python", "flask", "mcp", "copier", "template"]
+    },
+    {
+      "name": "di-replication-sync",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/ERP-LAB-5/sap-di-tools.git",
+        "path": "plugin"
+      },
+      "description": "Compare and promote SAP Data Intelligence replication flows between landscapes. Unofficial; not affiliated with SAP.",
+      "author": { "name": "D-LAB-5" },
+      "category": "productivity",
+      "keywords": ["sap", "data intelligence", "replication flow"]
+    }
+  ]
+}

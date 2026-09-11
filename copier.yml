@@ -1,0 +1,177 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 D-LAB-5
+#
+# The D-LAB-5 small full-stack Python tool: a stdlib engine with a CLI, a Flask
+# page on loopback, an optional MCP server, and an agent skill that ships in
+# the package and as a Claude Code plugin.
+#
+#   copier copy gh:ERP-LAB-5/python-tool-template my-tool
+#   copier update                      # later, inside my-tool: take core fixes
+#
+# Files split into two kinds, and the split is what keeps `copier update`
+# merges quiet:
+#
+#   core-owned   everything under <package>/core/, the launchers, test.sh,
+#                tests/test_core.py, scripts/release.py, plugin/bin/launch_mcp.py.
+#                Rendered from the answers alone, never edited by hand. An
+#                update rewrites them.
+#   tool-owned   listed in _skip_if_exists below. Generated once as a working
+#                sample, then yours. An update never touches them again.
+
+_min_copier_version: "9.4"
+_subdirectory: template
+_templates_suffix: .jinja
+_answers_file: .copier-answers.yml
+
+_skip_if_exists:
+  - README.md
+  - pyproject.toml
+  - requirements.txt
+  # a tool adds ignores for its own runtime data (exports, flows, credentials),
+  # and an update must never quietly drop one of those
+  - .gitignore
+  - requirements-dev.txt
+  - "{{ package_name }}/__init__.py"
+  - "{{ package_name }}/VERSION"
+  - "{{ package_name }}/app.py"
+  - "{{ package_name }}/{{ cli_module }}.py"
+  - "{{ package_name }}/mcp_server.py"
+  - "{{ package_name }}/skill/SKILL.md"
+  - "{{ package_name }}/templates/index.html"
+  - "{{ package_name }}/static/*"
+  - "{{ package_name }}/{{ shared_dir }}/*"
+  - ".claude/skills/{{ tool_name }}/SKILL.md"
+  - ".claude/settings.json"
+  - "plugin/.claude-plugin/plugin.json"
+  - "plugin/bin/VERSION"
+  - "plugin/skills/{{ tool_name }}/SKILL.md"
+  - "tests/test_{{ package_name }}.py"
+  - "tests/conftest.py"
+
+_message_after_copy: |
+  {{ title }} is in {{ _copier_conf.dst_path }}.
+
+    cd {{ _copier_conf.dst_path }}
+    git init -b main && git add -A && git commit -m "Start {{ tool_name }} from the D-LAB-5 tool template"
+    ./test.sh
+    ./run.sh                      # http://127.0.0.1:{{ port }}
+
+  Core fixes arrive later with `copier update`. Leave <package>/core/ alone so
+  they merge cleanly.
+
+# ------------------------------------------------------------------ identity --
+
+tool_name:
+  type: str
+  help: Tool name, kebab-case. It becomes the pip distribution, the skill and the plugin name
+  placeholder: di-replication-sync
+  validator: >-
+    {% if not (tool_name | regex_search('^[a-z][a-z0-9]*(-[a-z0-9]+)*$')) %}
+    lowercase letters, digits and single hyphens, starting with a letter
+    {% endif %}
+
+package_name:
+  type: str
+  help: Python package name
+  default: "{{ tool_name | replace('-', '_') }}"
+  validator: >-
+    {% if not (package_name | regex_search('^[a-z][a-z0-9_]*$')) %}
+    a valid Python identifier in lowercase
+    {% endif %}
+
+title:
+  type: str
+  help: Human title, for the page header and the About box
+  default: "{{ tool_name | replace('-', ' ') | capitalize }}"
+
+description:
+  type: str
+  help: One line. It goes into pyproject, the plugin and the About box
+  default: "{{ title }}"
+
+github_org:
+  type: str
+  default: ERP-LAB-5
+
+repo_name:
+  type: str
+  help: GitHub repository. Several tools may share one, as sap-di-tools does
+  default: "{{ tool_name }}"
+
+default_branch:
+  type: str
+  help: Branch whose VERSION file counts as the latest release
+  default: main
+
+author:
+  type: str
+  default: D-LAB-5
+
+copyright_year:
+  type: int
+  default: 2026
+
+# -------------------------------------------------------------------- shape --
+
+port:
+  type: int
+  help: Loopback port for the web page. Give every tool its own
+  default: 8770
+
+cli_command:
+  type: str
+  help: The command line's name. Web, MCP and skill commands are derived from it
+  default: "{{ tool_name }}"
+
+cli_module:
+  type: str
+  help: Module in the package holding the stdlib engine and its main()
+  default: engine
+
+disclaimer:
+  type: str
+  help: Optional warning for the About box and home page, e.g. "Unofficial. Not affiliated with SAP."
+  default: ""
+
+coffee_url:
+  type: str
+  default: https://www.buymeacoffee.com/dlab5
+
+# ------------------------------------------------------------------ options --
+
+with_mcp:
+  type: bool
+  help: MCP server over stdio, so an agent can drive the same server a person has open
+  default: true
+
+with_windows:
+  type: bool
+  help: run.cmd and run.ps1 beside run.sh
+  default: true
+
+with_workspace:
+  type: bool
+  help: A git-ignored user folder that follows the working directory, plus samples that ship in the package
+  default: true
+
+workspace_dir:
+  type: str
+  help: The user's folder, relative to the working directory
+  default: mydocs
+  when: "{{ with_workspace }}"
+
+shared_dir:
+  type: str
+  help: Folder of samples inside the package
+  default: shared
+  when: "{{ with_workspace }}"
+
+with_release:
+  type: bool
+  help: scripts/release.py. It bumps VERSION everywhere, fixes the README pins, tags, and publishes the GitHub release
+  default: true
+
+with_plugin:
+  type: bool
+  help: plugin/ directory, so the tool installs into Claude Code as a plugin (skill, plus MCP if enabled)
+  default: true

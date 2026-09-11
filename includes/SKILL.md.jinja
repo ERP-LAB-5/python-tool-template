@@ -1,0 +1,69 @@
+---
+name: {{ tool_name }}
+description: {{ description }}. Validate and summarise notes (JSON objects with a title, body and tags){% if with_workspace %}, and read, save and delete them in the user's folder or the shared samples{% endif %}, from the command line{% if with_mcp %}, the {{ tool_name }} MCP tools{% endif %} or the browser page. Use when someone asks to work with {{ tool_name }}, or runs `{{ cli_command }}`. REPLACE this sample description with the tool's real triggers.
+---
+
+# {{ title }}
+
+<!--
+  The template's sample skill. Rewrite it for the tool, and keep three things
+  true: the frontmatter name stays "{{ tool_name }}", every `{{ cli_command }} <command>`
+  line names a subcommand that exists (tests/test_core.py checks), and after
+  editing, `{{ cli_command }}-skill --sync` copies this file to .claude/skills and
+  plugin/skills. The packaged copy in {{ package_name }}/skill/ is the source.
+-->
+
+{{ description }}.
+
+## What a note is
+
+A JSON object:
+
+```json
+{"title": "Kick-off", "body": "Agenda\n- scope\n- dates", "tags": ["project"]}
+```
+
+`title` is required (at most 120 characters), `body` is text, and `tags` is a
+list of strings.
+{%- if with_mcp %}
+
+## Working through MCP
+
+The `{{ tool_name }}` MCP server starts the web server if it is not running, so
+you and the person at the browser work on the same files.
+
+- `validate_note(note)` returns everything wrong with it. Run it before saving
+  anything you put together by hand.
+- `summarise_note(note)` gives word and line counts and the tags.
+{%- if with_workspace %}
+- `list_notes()`, `read_note(name, folder)`, `save_note(name, note, folder,
+  base_version)`, `delete_note(name, folder)`.
+{%- endif %}
+- `server_url()` gives the page to hand to a person. `stop_server()` shuts it down.
+{%- endif %}
+{%- if with_workspace %}
+
+## Folders
+
+Notes live in two folders. `user` (`./{{ workspace_dir }}`, git-ignored) holds
+the person's own. `shared` holds the samples that ship with the tool. A save
+with no folder goes back to where the note already lives, or to `user` when it
+is new. **Always pass the `version` you read as `base_version`:** a save against
+a version that has changed since then is refused (HTTP 409). Read the note again
+and merge, don't overwrite.
+{%- endif %}
+
+## Without MCP
+
+```bash
+{{ cli_command }} validate note.json
+{{ cli_command }} summarise note.json
+```
+
+From a checkout, without installing: `python3 -m {{ package_name }}.{{ cli_module }} summarise note.json`.
+The page is `./run.sh` (http://127.0.0.1:{{ port }}), or `{{ cli_command }}-web` when installed.
+
+## Judgement
+
+- Say what you changed and where it was saved (folder and name).
+- Never delete a shared sample unless you were asked to.
