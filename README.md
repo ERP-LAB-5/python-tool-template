@@ -3,6 +3,9 @@
 **The D-LAB-5 small full-stack Python tool, as a template, plus the agent kit to
 build with it.**
 
+> New to this? Start with **[the tool template, for the curious](docs/for-the-curious.md)**:
+> the problems it solves and the ideas behind it, without the jargon.
+
 [metro-map-tool](https://github.com/ERP-LAB-5/metro-map-tool) and
 [sap-di-tools](https://github.com/ERP-LAB-5/sap-di-tools) were built the same
 way. This repository is that way, taken out of both so the next tool starts

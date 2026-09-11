@@ -11,6 +11,12 @@ The user asked for: $ARGUMENTS
 Read the `python-tool-template` skill first if it isn't already loaded. It
 explains what gets generated and which files belong to whom.
 
+If the person seems new to all this (they ask what a template, MCP or a plugin
+is, or say they are "just trying an idea"), point them to
+https://github.com/ERP-LAB-5/python-tool-template/blob/main/docs/for-the-curious.md.
+It explains the concepts in plain language and encourages trying ideas you can
+throw away.
+
 ## 1. Make sure Copier is available
 
 Neither pipx nor uv is assumed. Copier lives in its own venv:
