@@ -259,6 +259,12 @@ def write_config(target_id: str) -> str:
 
     Returns the path written. Raises OSError if it cannot be written, and
     ValueError if the file exists but is not JSON we can safely add to.
+
+    What lands there names this machine's interpreter by absolute path, because
+    an agent has its own PATH and a relative one resolves against whatever
+    directory it happened to start in. That makes the file personal: committing
+    it hands a colleague a path that does not exist on their machine. A tool
+    from this template ignores these two files for that reason.
     """
     found = target(target_id)
     if found is None or not found["path"]:
