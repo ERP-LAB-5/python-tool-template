@@ -281,7 +281,7 @@ def write_config(target_id: str) -> str:
 
 
 def describe() -> Dict[str, object]:
-    """Everything the Connect panel shows, in one answer."""
+    """Everything the Agent panel shows, in one answer."""
     if not available():
         return {
             "tool": identity.TOOL_NAME,

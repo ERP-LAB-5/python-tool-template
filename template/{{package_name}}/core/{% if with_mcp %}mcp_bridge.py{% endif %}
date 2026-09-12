@@ -49,7 +49,7 @@ def call(method: str, path: str, payload: Optional[dict] = None,
          timeout: float = 30) -> Any:
     """One request against the web server, with its error messages preserved."""
     body = json.dumps(payload).encode() if payload is not None else None
-    # Name ourselves on every call. The web server records it, so the Connect
+    # Name ourselves on every call. The web server records it, so the Agent
     # panel in the browser can say an agent is working here rather than guess:
     # a stdio server has no port to look for and no pid the page could find.
     headers = {"X-Agent": f"{identity.TOOL_NAME}-mcp"}
