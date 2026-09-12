@@ -100,8 +100,9 @@ first:
 gh repo create ERP-LAB-5/<repo_name> --public --source . --push
 ```
 
-Then offer to add the tool to the `erp-lab-5` marketplace: an entry in
-`python-tool-template/.claude-plugin/marketplace.json` with
+Then offer to add the tool to the `erp-lab-5` marketplace, which lives in
+[darkfactory](https://github.com/ERP-LAB-5/darkfactory): an entry in
+`darkfactory/.claude-plugin/marketplace.json` with
 `{"source": "git-subdir", "url": "https://github.com/ERP-LAB-5/<repo_name>.git", "path": "plugin"}`.
 The plugin's MCP server installs `@v<VERSION>`, so it works once the first
 release is tagged (`scripts/release.py`).

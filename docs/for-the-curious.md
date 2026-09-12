@@ -186,7 +186,9 @@ command the skill mentions really exists.
 
 A **plugin** bundles a tool's skill (and, if it has one, its MCP server) so
 Claude Code can install it in one step. A **marketplace** is a list of plugins
-to choose from. This repository is the `erp-lab-5` marketplace.
+to choose from. Ours is called `erp-lab-5` and lives in
+[darkfactory](https://github.com/ERP-LAB-5/darkfactory), the repository that
+holds everything ERP-LAB-5 shares.
 
 There are two kinds of plugins in it:
 
@@ -274,7 +276,7 @@ box.)
 **With the AI assistant**, in Claude Code:
 
 ```
-/plugin marketplace add ERP-LAB-5/python-tool-template
+/plugin marketplace add ERP-LAB-5/darkfactory
 /plugin install pytool-kit@erp-lab-5
 ```
 

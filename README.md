@@ -68,10 +68,11 @@ To change the core, change it here, run `./test.sh`, tag a release, then run
 
 ## The agent kit: plugins
 
-This repository is also the **`erp-lab-5` Claude Code marketplace**:
+`pytool-kit` is listed in the **`erp-lab-5` marketplace**, which lives in
+[ERP-LAB-5/darkfactory](https://github.com/ERP-LAB-5/darkfactory):
 
 ```
-/plugin marketplace add ERP-LAB-5/python-tool-template
+/plugin marketplace add ERP-LAB-5/darkfactory
 /plugin install pytool-kit@erp-lab-5             # for building tools
 /plugin install di-replication-sync@erp-lab-5    # a tool, as a plugin
 ```
@@ -86,8 +87,8 @@ This repository is also the **`erp-lab-5` Claude Code marketplace**:
 | `/pytool-kit:release` | `scripts/release.py`: dry run, notes, tag, push, GitHub release |
 
 **Each tool's plugin** is its repository's `plugin/` directory, listed in
-[.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) as a
-`git-subdir` source. Its MCP entry runs `plugin/bin/launch_mcp.py`. On first use
+darkfactory's [catalogue](https://github.com/ERP-LAB-5/darkfactory/blob/main/.claude-plugin/marketplace.json)
+as a `git-subdir` source. Its MCP entry runs `plugin/bin/launch_mcp.py`. On first use
 that script creates a venv for the pinned version under
 `~/.local/share/dlab5-tools/<tool>/<version>/` and installs
 `git+<repo>@v<version>` into it. Later starts go straight to the server.
