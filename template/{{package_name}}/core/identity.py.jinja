@@ -29,7 +29,7 @@ DEFAULT_PORT = {{ port }}
 
 CLI_COMMAND = {{ cli_command | tojson }}
 CLI_MODULE = {{ cli_module | tojson }}
-WEB_COMMAND = {{ (cli_command ~ "-web") | tojson }}
+WEB_COMMAND = {{ web_command | tojson }}
 MCP_COMMAND = {{ (cli_command ~ "-mcp") | tojson }}
 SKILL_COMMAND = {{ (cli_command ~ "-skill") | tojson }}
 SKILL_NAME = {{ tool_name | tojson }}

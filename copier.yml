@@ -128,6 +128,14 @@ cli_module:
   help: Module in the package holding the stdlib engine and its main()
   default: engine
 
+web_command:
+  type: str
+  help: >-
+    The installed command that starts the web page. Only change it for a tool
+    whose command is already published under another name — renaming one
+    breaks every existing install
+  default: "{{ cli_command }}-web"
+
 disclaimer:
   type: str
   help: Optional warning for the About box and home page, e.g. "Unofficial. Not affiliated with SAP."
