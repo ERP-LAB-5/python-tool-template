@@ -105,13 +105,19 @@ It needs `python3` on PATH.
 {%- if with_mcp %}
 
 **From a checkout**, `.mcp.json` registers the MCP server for this repository.
-Point another agent at it with:
 
-```json
-{"mcpServers": {"{{ tool_name }}": {
-  "command": "/path/to/{{ repo_name }}/.venv/bin/python",
-  "args": ["-m", "{{ package_name }}.mcp_server"]}}}
-```
+**For any other agent, press Agent** in the header. It writes the JSON for
+Claude Code, VS Code (GitHub Copilot), Cursor or Claude Desktop with the real
+paths already filled in — each client keeps the same server under a slightly
+different key, in a different file — and either copies it or writes the file
+for you, keeping any other servers already registered there. The panel also
+shows whether an agent is currently working on this server.
+
+MCP itself is the standard, so the server is written once and every client
+speaks to it unchanged; only that small config file differs between them. What
+no page can do is *start* one: a stdio server is spawned by its client, lives on
+that client's pipes and dies with it, so there is nothing to start or stop from
+the browser.
 
 The MCP server starts the web server if it is not running, and both work on the
 same files, so an agent's save shows up for the person at the browser.
@@ -119,7 +125,9 @@ same files, so an agent's save shows up for the person at the browser.
 
 [**The skill**]({{ package_name }}/skill/SKILL.md) ships inside the package.
 `{{ cli_command }}-skill --install` copies it to `~/.claude/skills` for agents
-that don't use the plugin. A checkout has identical copies in
+that don't use the plugin, and `--install --for vscode` writes it as
+`.github/copilot-instructions.md` instead (`--for cursor` for Cursor's rules
+folder). A checkout has identical copies in
 `.claude/skills/{{ tool_name }}/`{% if with_plugin %} and `plugin/skills/{{ tool_name }}/`{% endif %}. They are
 real files rather than symlinks, because symlinks don't survive a clone on
 Windows. `{{ cli_command }}-skill --check` confirms they are in step, and

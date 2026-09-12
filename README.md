@@ -13,8 +13,10 @@ from it and the existing ones stay in step with it:
 
 - a **stdlib engine with a command line**;
 - a **Flask page on loopback** with a shared header (theme, About with version
-  check and self-update, Restart, Stop);
-- an optional **MCP server** that drives the same web server a person has open;
+  check and self-update, Agent, Restart, Stop);
+- an optional **MCP server** that drives the same web server a person has open,
+  with an **Agent** panel that writes the config for Claude Code, VS Code
+  (Copilot), Cursor or Claude Desktop and says whether an agent is working;
 - an **agent skill** that ships in the package, in `.claude/skills`, and as a
   **Claude Code plugin**;
 - `run.sh` / `run.cmd` / `run.ps1` launchers, a ROS-proof `test.sh`, and a
