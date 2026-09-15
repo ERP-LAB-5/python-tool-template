@@ -116,6 +116,7 @@ def main() -> int:
     args = ap.parse_args()
     web.configure(port=args.port, url=args.url, autostart=not args.no_autostart)
     web.log(f"serving MCP over stdio, web server at {web.BASE}")
+    web.start_heartbeat()
     server.run()
     return 0
 

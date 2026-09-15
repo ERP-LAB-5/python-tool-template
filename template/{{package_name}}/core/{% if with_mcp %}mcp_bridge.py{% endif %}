@@ -12,6 +12,7 @@ this module is the client:
     web.configure(port=args.port, autostart=True)
     web.call("GET", "/api/things")              # ensure_server() first
     web.add_core_tools(server)                  # server_url, stop_server
+    web.start_heartbeat()                       # so About can say it is running
 
 Nothing may be written to stdout here or anywhere in an MCP server: stdout is
 the transport. log() goes to stderr.
@@ -20,8 +21,10 @@ the transport. log() goes to stderr.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -39,6 +42,39 @@ def configure(port: Optional[int] = None, url: Optional[str] = None,
     global BASE, AUTOSTART
     BASE = (url or f"http://127.0.0.1:{port or identity.DEFAULT_PORT}").rstrip("/")
     AUTOSTART = autostart
+
+
+def start_heartbeat(every: Optional[float] = None) -> threading.Thread:
+    """Tell the web server, every so often, that this MCP server is running.
+
+    A stdio server has no port the web server could knock on, so without this
+    the About box could only guess from tool calls, and an agent that is open
+    but idle would look dead. The beat never starts a web server — an MCP
+    server someone left open must not bring one back after it was stopped. A
+    failed beat is tried again after a couple of seconds rather than a whole
+    interval, so a web server that has just come up sees it straight away.
+    """
+    from . import services
+    interval = float(every or services.BEAT_EVERY)
+    body = json.dumps({"pid": os.getpid()}).encode()
+
+    def pulse() -> None:
+        while True:
+            req = urllib.request.Request(
+                BASE + "/api/mcp/heartbeat", data=body, method="POST",
+                headers={"X-Agent": f"{identity.TOOL_NAME}-mcp",
+                         "Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(req, timeout=3):
+                    pass
+                wait = interval
+            except Exception:            # noqa: BLE001 - not running is fine
+                wait = min(2.0, interval)
+            time.sleep(wait)
+
+    thread = threading.Thread(target=pulse, name="mcp-heartbeat", daemon=True)
+    thread.start()
+    return thread
 
 
 def log(msg: str) -> None:

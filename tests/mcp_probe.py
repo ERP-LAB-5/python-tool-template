@@ -14,6 +14,8 @@ import asyncio
 import json
 import os
 import sys
+import time
+import urllib.request
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -46,6 +48,19 @@ async def main() -> None:
             bad = await session.call_tool("validate_note", {"note": {"body": 1}})
             assert "title is required" in json.dumps([c.text for c in bad.content]), bad
             print("  mcp: tools listed, note saved and read back, validation ok")
+            # the About box: the heartbeat must turn the MCP row green while
+            # this server runs, without an agent having to call anything
+            base = text(await session.call_tool("server_url", {})).strip().rstrip("/")
+            state = None
+            for _ in range(40):
+                with urllib.request.urlopen(f"{base}/api/services", timeout=3) as res:
+                    rows = {r["id"]: r for r in json.loads(res.read())["services"]}
+                state = rows["mcp"]["state"]
+                if state == "up":
+                    break
+                time.sleep(0.25)
+            assert state == "up", rows["mcp"]
+            print("  mcp: About shows the MCP server up —", rows["mcp"]["detail"])
             print("  mcp:", text(await session.call_tool("stop_server", {})))
 
 
