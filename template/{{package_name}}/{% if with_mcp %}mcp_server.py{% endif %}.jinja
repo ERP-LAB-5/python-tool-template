@@ -62,7 +62,8 @@ def summarise_note(note: dict) -> dict:
     """Word and line counts and the distinct tags of a valid note."""
     errors = engine.validate(note)
     if errors:
-        raise ValueError("; ".join(errors))
+        # web.ToolError, not ValueError: only this kind reaches the agent's model
+        raise web.ToolError("; ".join(errors))
     return engine.summarise(note)
 {%- if with_workspace %}
 
@@ -116,6 +117,7 @@ def main() -> int:
     args = ap.parse_args()
     web.configure(port=args.port, url=args.url, autostart=not args.no_autostart)
     web.log(f"serving MCP over stdio, web server at {web.BASE}")
+    web.start_heartbeat()
     server.run()
     return 0
 

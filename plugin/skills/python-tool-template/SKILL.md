@@ -30,7 +30,8 @@ Python constants. Every core module reads its names from there.
 **Core-owned.** `copier update` rewrites these files. Don't edit them in a tool
 repository. Change them in the template and update.
 - `<package>/core/**`: `identity.py`, `version.py`, `server.py`, `skill_install.py`,
-  `mcp_bridge.py`, `workspace.py`, `static/core.{css,js}`, `static/dlab5.png`,
+  `mcp_bridge.py`, `workspace.py`, `services.py`, `agent.py`,
+  `static/core.{css,js}`, `static/dlab5.png`,
   `templates/core/_base.html`
 - `run.sh`, `run.cmd`, `run.ps1`, `test.sh`, `.gitattributes`
 - `tests/test_core.py`, `scripts/release.py`, `plugin/bin/launch_mcp.py`, `plugin/.mcp.json`, `.mcp.json`
@@ -83,6 +84,23 @@ Do these in order, and don't skip a layer the tool has:
 For the About box, register rows with
 `server.about_extras(lambda: {"Data folder": str(path)})` rather than editing
 the dialog.
+
+The About box also lists **services** with a dot each: green up, red down,
+grey not part of this tool. Core supplies web server, MCP server (from a
+heartbeat the MCP process sends every 20 s — a stdio server has no port to
+probe), update check, agent skill and workspace folder, and each goes grey
+when the tool was built without it. A tool adds its own backends with
+
+```python
+from .core import services
+services.register("jira", "Jira", check=lambda: (True, "connected as Ann"),
+                  enabled=lambda: (configured(), "add a token under Settings"))
+```
+
+`check()` may reach a network: checks run side by side with a 6 s deadline,
+and an exception is a red row carrying its message, never a broken dialog. A
+tool-owned `mcp_server.py` from before this existed must call
+`web.start_heartbeat()` in `main()` — `copier update` does not touch it.
 
 ## Constraints that bite
 
