@@ -62,7 +62,8 @@ def summarise_note(note: dict) -> dict:
     """Word and line counts and the distinct tags of a valid note."""
     errors = engine.validate(note)
     if errors:
-        raise ValueError("; ".join(errors))
+        # web.ToolError, not ValueError: only this kind reaches the agent's model
+        raise web.ToolError("; ".join(errors))
     return engine.summarise(note)
 {%- if with_workspace %}
 

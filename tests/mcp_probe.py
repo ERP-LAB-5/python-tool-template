@@ -48,6 +48,12 @@ async def main() -> None:
             bad = await session.call_tool("validate_note", {"note": {"body": 1}})
             assert "title is required" in json.dumps([c.text for c in bad.content]), bad
             print("  mcp: tools listed, note saved and read back, validation ok")
+            # a refusal must reach the model as the sentence the tool wrote: the
+            # SDK hides the text of anything but its own ToolError
+            failed = await session.call_tool("summarise_note", {"note": {"body": 1}})
+            said = json.dumps([c.text for c in failed.content])
+            assert "title is required" in said, said
+            print("  mcp: a tool's error message reaches the client")
             # the About box: the heartbeat must turn the MCP row green while
             # this server runs, without an agent having to call anything
             base = text(await session.call_tool("server_url", {})).strip().rstrip("/")

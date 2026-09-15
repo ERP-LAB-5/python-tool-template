@@ -243,6 +243,15 @@ def test_the_skill_counts_as_installed_in_a_checkout_that_carries_it(
     assert row["state"] == "down" and "not installed" in row["detail"]
 
 
+@pytest.mark.skipif(not identity.WITH_MCP, reason="no MCP server in this tool")
+def test_a_bridge_error_is_one_the_mcp_sdk_delivers_to_the_model():
+    from mcp.server.mcpserver.exceptions import ToolError as Delivered
+    from {{ package_name }}.core import mcp_bridge
+    assert issubclass(mcp_bridge.ToolError, Delivered)
+    assert issubclass(mcp_bridge.ToolError, ValueError)        # old catches still work
+    assert issubclass(mcp_bridge.NotAnswering, ConnectionError)
+
+
 def test_the_about_box_asks_for_the_services(client):
     js = (PKG / "core" / "static" / "core.js").read_text(encoding="utf-8")
     assert "/api/services" in js
