@@ -138,9 +138,13 @@ git -C "$SRC" tag v0.0.2
 (cd "$dst" && "$COPIER" update --quiet --trust --defaults --vcs-ref v0.0.2 >/dev/null)
 pkg=$(sed -n 's/^package_name: //p' "$dst/.copier-answers.yml")
 changed=$(cd "$dst" && git status --porcelain | awk '{print $2}' | LC_ALL=C sort | tr '\n' ' ')
-expected=$(printf '%s\n' .copier-answers.yml "$pkg/core/static/core.css" | LC_ALL=C sort | tr '\n' ' ')
+# identity.py records the template version, so it moves with every update
+expected=$(printf '%s\n' .copier-answers.yml "$pkg/core/identity.py" "$pkg/core/static/core.css" \
+  | LC_ALL=C sort | tr '\n' ' ')
 [ "$changed" = "$expected" ] || fail "update changed [$changed], expected [$expected]"
 grep -q "core fix from the template" "$dst/$pkg/core/static/core.css" || fail "core fix missing"
+grep -q '^TEMPLATE_VERSION = "v0.0.2"$' "$dst/$pkg/core/identity.py" \
+  || fail "identity.py does not name the template version the update applied"
 grep -q "the tool's own rule" "$dst/$pkg/static/style.css" || fail "tool edit lost"
 grep -q "template-side change" "$dst/$pkg/static/style.css" && fail "update touched a tool-owned file"
 echo "  core.css updated, style.css untouched"
