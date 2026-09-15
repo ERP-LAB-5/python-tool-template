@@ -85,6 +85,12 @@ For the About box, register rows with
 `server.about_extras(lambda: {"Data folder": str(path)})` rather than editing
 the dialog.
 
+The About box shows **Built on python-tool-template vX.Y.Z**, from
+`core.identity.TEMPLATE_VERSION`, which copier renders from the same `_commit`
+that `.copier-answers.yml` records — an installed copy has no answers file, so
+the code carries it. `--version` and the startup lines say it too. A version
+with a commit suffix means the tool was rendered from an unreleased template.
+
 The About box also lists **services** with a dot each: green up, red down,
 grey not part of this tool. Core supplies web server, MCP server (from a
 heartbeat the MCP process sends every 20 s — a stdio server has no port to

@@ -27,6 +27,15 @@ DEFAULT_BRANCH = {{ default_branch | tojson }}
 
 DEFAULT_PORT = {{ port }}
 
+# The template this tool was generated from, and the version last applied to
+# it — the same value as _commit in .copier-answers.yml, which lives at the
+# repository root and is not shipped with an installed copy, so it is written
+# here too. A tag like "v0.4.0" is a published template release; anything with
+# a commit suffix ("v0.4.0-2-g1a2b3c4") was rendered from an unreleased commit.
+TEMPLATE_NAME = "python-tool-template"
+TEMPLATE_URL = "https://github.com/ERP-LAB-5/python-tool-template"
+TEMPLATE_VERSION = {{ (_copier_answers._commit | default("unknown", true)) | string | tojson }}
+
 CLI_COMMAND = {{ cli_command | tojson }}
 CLI_MODULE = {{ cli_module | tojson }}
 WEB_COMMAND = {{ web_command | tojson }}
