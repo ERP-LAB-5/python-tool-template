@@ -68,7 +68,11 @@ This is what was done for sap-di-tools. Work on a branch.
 
    Afterwards, review `git status` and `git diff`:
    - **Delete sample files that don't apply:** `tests/test_<package>.py` (the
-     notes tests), and an empty `.claude/settings.json`.
+     notes tests).
+   - **Keep `.claude/settings.json`.** If the tool had none, the update made
+     one enabling `dlab5-house`, `pytool-kit` and the domain's plugin from the
+     d-lab-5 catalogue. Add the tool's own plugins to it; an update never
+     touches it again.
    - **Replace the plugin's skill copy.** `plugin/skills/<tool>/SKILL.md` was
      generated from the *sample* skill, so run `<cli>-skill --sync` to replace
      it with the tool's real one.

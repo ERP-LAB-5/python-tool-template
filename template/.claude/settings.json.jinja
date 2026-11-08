@@ -1,0 +1,15 @@
+{
+  "extraKnownMarketplaces": {
+    "d-lab-5": { "source": { "source": "github", "repo": "d-lab-5/agent-skills" } }
+  },
+  "enabledPlugins": {
+    "dlab5-house@d-lab-5": true,
+{%- if github_org == "ERP-LAB-5" %}
+    "erplab5-house@d-lab-5": true,
+{%- elif github_org == "DigitalHome-cloud" %}
+    "dhc@d-lab-5": true,
+{%- endif %}
+    "pytool-kit@d-lab-5": true
+  }{% if with_mcp %},
+  "enabledMcpjsonServers": [{{ tool_name | tojson }}]{% endif %}
+}

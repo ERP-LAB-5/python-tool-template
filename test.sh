@@ -73,6 +73,21 @@ for answers in tests/answers-*.yml; do
   with_mcp=$(sed -n 's/^with_mcp: //p' "$dst/.copier-answers.yml")
   with_plugin=$(sed -n 's/^with_plugin: //p' "$dst/.copier-answers.yml")
 
+  echo "  -- the plugins its sessions load"
+  python3 - "$dst" "$tool" "$with_mcp" <<'PY' || fail ".claude/settings.json does not declare the plugins"
+import json, re, sys
+dst, tool, mcp = sys.argv[1:]
+s = json.load(open(f"{dst}/.claude/settings.json"))
+org = re.search(r"^github_org: (.+)$", open(f"{dst}/.copier-answers.yml").read(), re.M)
+want = ["dlab5-house@d-lab-5", "pytool-kit@d-lab-5"]
+want += {"ERP-LAB-5": ["erplab5-house@d-lab-5"], "DigitalHome-cloud": ["dhc@d-lab-5"]}.get(org.group(1).strip("'\"") if org else "", [])
+missing = [p for p in want if not s.get("enabledPlugins", {}).get(p)]
+assert s["extraKnownMarketplaces"]["d-lab-5"]["source"]["repo"] == "d-lab-5/agent-skills"
+assert not missing, missing
+assert (s.get("enabledMcpjsonServers") == [tool]) == (mcp == "true"), s.get("enabledMcpjsonServers")
+PY
+  echo "  dlab5-house, pytool-kit and the domain's plugin enabled"
+
   echo "  -- its own test suite"
   (cd "$dst" && ./test.sh -q)
 
