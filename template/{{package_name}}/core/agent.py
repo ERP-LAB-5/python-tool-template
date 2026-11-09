@@ -141,8 +141,9 @@ def targets() -> List[Dict[str, object]]:
                 "path": str(home / ".claude" / "skills" / identity.SKILL_NAME / "SKILL.md"),
                 "how": f"{identity.SKILL_COMMAND} --install",
             },
-            "note": "A checkout already has this file. Claude Code also takes "
-                    "the tool as a plugin, which brings the skill with it.",
+            "note": "The launchers write this file on first start; it is "
+                    "gitignored. Claude Code also takes the tool as a plugin, "
+                    "which brings the skill with it.",
         },
         {
             "id": "vscode",
@@ -280,6 +281,62 @@ def write_config(target_id: str) -> str:
     return str(path)
 
 
+def ensure_project_config() -> Optional[str]:
+    """Give a checkout its .mcp.json, unless it already names this tool.
+
+    The launchers call this on every start. The file names this machine's
+    venv, so it is generated rather than committed: a committed one held
+    `.venv/bin/python`, which does not exist on Windows. An entry already
+    there is left alone, so a person's own edit survives a restart. Returns
+    the path written, or None when nothing needed writing.
+    """
+    if not available() or repo_root() is None:
+        return None
+    found = target("claude-code")
+    path = Path(str(found["path"])) if found else None
+    if path is None:
+        return None
+    try:
+        current = json.loads(path.read_text(encoding="utf-8"))
+        if identity.TOOL_NAME in (current.get("mcpServers") or {}):
+            return None
+    except FileNotFoundError:
+        pass
+    except (ValueError, AttributeError):
+        return None                     # not ours to repair; the panel says so
+    return write_config("claude-code")
+
+
+def _ignored_by_git(path: Path) -> Optional[bool]:
+    """True or False inside a git checkout; None when git cannot tell."""
+    import subprocess
+    try:
+        done = subprocess.run(["git", "check-ignore", "-q", str(path)],
+                              cwd=str(path.parent), capture_output=True)
+    except OSError:
+        return None
+    return {0: True, 1: False}.get(done.returncode)
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    """`python -m <package>.core.agent --ensure`: what the launchers run."""
+    args = sys.argv[1:] if argv is None else argv
+    if args != ["--ensure"]:
+        print("usage: python -m <package>.core.agent --ensure", file=sys.stderr)
+        return 2
+    try:
+        wrote = ensure_project_config()
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"  ! could not write .mcp.json: {exc}", file=sys.stderr)
+        return 0                        # never stop the tool from starting
+    if wrote:
+        print(f"  wrote {Path(wrote).name} for agents working in this checkout")
+        if _ignored_by_git(Path(wrote)) is False:
+            print("  ! .mcp.json is not gitignored: add it, it names this "
+                  "machine's interpreter")
+    return 0
+
+
 def describe() -> Dict[str, object]:
     """Everything the Agent panel shows, in one answer."""
     if not available():
@@ -302,3 +359,7 @@ def describe() -> Dict[str, object]:
         "targets": targets(),
         "status": status(),
     }
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

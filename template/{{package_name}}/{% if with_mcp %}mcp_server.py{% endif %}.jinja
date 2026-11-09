@@ -14,7 +14,7 @@ on demand, so browser and agent never disagree about what is on disk.
     {{ cli_command }}-mcp --no-autostart                # fail instead of starting one
     python3 -m {{ package_name }}.mcp_server            # the same, from a checkout
 
-Register it in .mcp.json (a checkout already has one), or install the Claude
+Register it in .mcp.json (the launchers write one into a checkout), or install the Claude
 Code plugin, which brings this server and the skill together.
 
 Nothing may be written to stdout: that is the MCP transport. Log to stderr.

@@ -12,10 +12,16 @@ cd "$(dirname "$0")"
 unset PYTHONPATH
 export PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 
-if [ ! -x .venv/bin/python ]; then
+# A venv keeps its interpreter in bin/ on Linux and macOS, and in Scripts/ on
+# Windows, where Git Bash runs this script too. Windows has no python3.
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) VPY=.venv/Scripts/python.exe; BOOT=python ;;
+  *)                    VPY=.venv/bin/python;         BOOT=python3 ;;
+esac
+if [ ! -x "$VPY" ]; then
   echo "  creating .venv ..."
-  python3 -m venv .venv
-  .venv/bin/python -m pip install --quiet --upgrade pip
+  "$BOOT" -m venv .venv
+  "$VPY" -m pip install --quiet --upgrade pip
 fi
 # `python -m pip`, not `.venv/bin/pip`: that wrapper is a generated script with
 # an absolute shebang, so a venv copied in from another directory has one that
@@ -23,11 +29,11 @@ fi
 cat requirements.txt requirements-dev.txt > .venv/.test-requirements.new
 if ! cmp -s .venv/.test-requirements.new .venv/.test-requirements.txt; then
   echo "  installing requirements ..."
-  .venv/bin/python -m pip install --quiet -r requirements.txt -r requirements-dev.txt
+  "$VPY" -m pip install --quiet -r requirements.txt -r requirements-dev.txt
   mv .venv/.test-requirements.new .venv/.test-requirements.txt
   # run.sh keeps its own stamp; the runtime set is now installed too
   cp requirements.txt .venv/.requirements.txt
 else
   rm -f .venv/.test-requirements.new
 fi
-exec .venv/bin/python -m pytest "${@:-tests/}"
+exec "$VPY" -m pytest "${@:-tests/}"

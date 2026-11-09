@@ -71,6 +71,11 @@ if errorlevel 1 (
     )
     copy /y requirements.txt .venv\.requirements.txt >nul
 )
+{%- if with_mcp %}
+
+:: .mcp.json names this machine's venv, so it is written here, not committed
+"%PY_VENV%" -m {{ package_name }}.core.agent --ensure
+{%- endif %}
 
 :: do not start on top of a port we could not free
 call :stop_server

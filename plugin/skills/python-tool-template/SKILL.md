@@ -34,7 +34,9 @@ repository. Change them in the template and update.
   `static/core.{css,js}`, `static/dlab5.png`,
   `templates/core/_base.html`
 - `run.sh`, `run.cmd`, `run.ps1`, `test.sh`, `.gitattributes`
-- `tests/test_core.py`, `scripts/release.py`, `plugin/bin/launch_mcp.py`, `plugin/.mcp.json`, `.mcp.json`
+- `tests/test_core.py`, `scripts/release.py`, `plugin/bin/launch_mcp.py`, `plugin/.mcp.json`
+- `.mcp.json` is neither: it is gitignored, and the launchers write it on first
+  start (`python -m <package>.core.agent --ensure`) with this machine's venv
 
 **Tool-owned.** Generated once as a working "notes" sample, then yours.
 `copier update` never touches them again:
@@ -137,6 +139,10 @@ tool-owned `mcp_server.py` from before this existed must call
 - **The update check reads raw `VERSION` on the default branch, not the GitHub
   API** (60 calls/hour unauthenticated). So `VERSION` on main *is* the release
   pointer: don't bump it on main without tagging.
+- **A venv's interpreter is `.venv/bin/python` on Linux and macOS but
+  `.venv/Scripts/python.exe` on Windows.** `run.sh` and `test.sh` pick by
+  `uname`; `run.cmd` and `run.ps1` use `Scripts`. That is why `.mcp.json` is
+  generated, not committed: one committed path cannot be right on both.
 - **pip can't update a checkout.** `/api/update` returns 400 and says `git pull`.
 - **package-data** must list `VERSION`, `templates/*.html`, `static/*`,
   `skill/*.md`, the shared samples, and for `<package>.core`, `static/*` and
