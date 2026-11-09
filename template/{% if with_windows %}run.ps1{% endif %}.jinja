@@ -96,6 +96,11 @@ if ($wanted -ne $had) {
     if ($LASTEXITCODE -ne 0) { throw "could not install requirements.txt — check your network or proxy" }
     Set-Content -NoNewline -Path $stamp -Value $wanted
 }
+{%- if with_mcp %}
+
+# .mcp.json names this machine's venv, so it is written here, not committed
+& $py -m {{ package_name }}.core.agent --ensure
+{%- endif %}
 
 # ------------------------------------------------------------------ restart --
 Stop-Server

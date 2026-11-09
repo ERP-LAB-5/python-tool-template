@@ -104,7 +104,9 @@ It needs `python3` on PATH.
 {%- endif %}
 {%- if with_mcp %}
 
-**From a checkout**, `.mcp.json` registers the MCP server for this repository.
+**From a checkout**, `./run.sh` (or `run.cmd`, `run.ps1`) writes `.mcp.json` on
+first start, which registers the MCP server for this repository. It names this
+machine's venv, so it is gitignored.
 
 **For any other agent, press Agent** in the header. It writes the JSON for
 Claude Code, VS Code (GitHub Copilot), Cursor or Claude Desktop with the real

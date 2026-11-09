@@ -44,7 +44,7 @@ command and engine module, an optional disclaimer, and five options:
 
 | option | what it adds |
 |---|---|
-| `with_mcp` | `mcp_server.py` on `core/mcp_bridge.py` (autostarts the web server), `.mcp.json` |
+| `with_mcp` | `mcp_server.py` on `core/mcp_bridge.py` (autostarts the web server); the launchers write a gitignored `.mcp.json` |
 | `with_windows` | `run.cmd` and `run.ps1`, same behaviour as `run.sh` |
 | `with_workspace` | `core/workspace.py`: a git-ignored user folder that follows the working directory, samples in the package, atomic saves with version-conflict detection |
 | `with_release` | `scripts/release.py X.Y.Z [--push]` |

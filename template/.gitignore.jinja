@@ -228,10 +228,11 @@ dist/
 # scratch — never committed, may hold credentials
 temp/
 
-# Agent configuration written by the Agent panel. These name this machine's
-# interpreter by absolute path, so committing one hands a colleague a path that
-# does not exist there. The files, not the folders: .vscode/settings.json and
-# .cursor/rules/ are a team's business and stay tracked.
+# Agent configuration written by the launchers and the Agent panel. These name
+# this machine's interpreter by absolute path, so committing one hands a
+# colleague a path that does not exist there. The files, not the folders:
+# .vscode/settings.json and .cursor/rules/ are a team's business and stay tracked.
+.mcp.json
 .vscode/mcp.json
 .cursor/mcp.json
 {%- if with_workspace %}
