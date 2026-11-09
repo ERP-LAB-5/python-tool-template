@@ -1,0 +1,70 @@
+{
+  "$comment": "What a tool made from this template must look like. Read by dlab5-repo-conformance in the d-lab-5 catalogue's dlab5-house; change it in the same PR as the template change it describes. {package_name} and {tool_name} come from the tool's .copier-answers.yml.",
+  "type": "lite",
+  "template": "ERP-LAB-5/python-tool-template",
+  "detect": {
+    "answers": ".copier-answers.yml",
+    "src": "python-tool-template"
+  },
+  "plugins": [
+    "dlab5-house@d-lab-5",
+    "pytool-kit@d-lab-5"
+  ],
+  "own_skill": ".claude/skills/{tool_name}",
+  "require": [
+    {
+      "path": "run.sh",
+      "why": "the launcher every tool starts with"
+    },
+    {
+      "path": "test.sh",
+      "why": "the test entry point CI and copier update rely on"
+    },
+    {
+      "path": "pyproject.toml"
+    },
+    {
+      "path": "{package_name}/VERSION",
+      "why": "the one place the version lives"
+    },
+    {
+      "path": "{package_name}/core/identity.py",
+      "why": "core-owned: the tool's name, port and version"
+    },
+    {
+      "path": "{package_name}/core/server.py",
+      "why": "core-owned: the loopback page and lifecycle endpoints"
+    },
+    {
+      "path": "{package_name}/core/skill_install.py",
+      "why": "core-owned: keeps the skill's three copies in step"
+    },
+    {
+      "path": "{package_name}/skill/SKILL.md",
+      "why": "the packaged copy of the tool's skill"
+    }
+  ],
+  "contains": [
+    {
+      "path": "run.sh",
+      "text": "unset PYTHONPATH",
+      "why": "ROS puts /opt/ros on PYTHONPATH in every shell and it leaks into the venv"
+    }
+  ],
+  "executable": [
+    {
+      "path": "run.sh",
+      "why": "./run.sh is how a person starts the tool"
+    },
+    {
+      "path": "test.sh",
+      "why": "./test.sh is how CI and copier update run the tests"
+    }
+  ],
+  "checks": [
+    {
+      "run": "./test.sh -q",
+      "why": "the tool's own tests, including the core's"
+    }
+  ]
+}
