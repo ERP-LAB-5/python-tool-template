@@ -317,11 +317,14 @@ def test_the_page_has_a_loading_card_and_button_help(client):
     # data-help puts a control's help above it instead of over it (title=)
     js = (PKG / "core" / "static" / "core.js").read_text(encoding="utf-8")
     css = (PKG / "core" / "static" / "core.css").read_text(encoding="utf-8")
-    for name in ("busy", "quiet", "setBusyLabel"):
+    for name in ("busy", "quiet", "setBusyLabel", "setHelp"):
         assert f" {name}," in js, name
     assert "[data-help]" in js and "#core-busy" in css and ".core-help" in css
     html = client.get("/").get_data(as_text=True)
     assert 'id="core-about" data-help=' in html and 'id="core-about" title=' not in html
+    # the help switch: on unless this browser turned it off
+    assert 'id="core-help-switch"' in html and 'aria-pressed="true"' in html
+    assert 'localStorage.getItem(helpKey()) !== "off"' in js and "!help.on ||" in js
 
 
 def test_the_page_offers_connect_only_when_there_is_an_mcp_server(client):

@@ -84,6 +84,8 @@ button.warn-btn { color: var(--warn); border-color: color-mix(in srgb, var(--war
 button.warn-btn:hover:not(:disabled) { border-color: var(--warn); }
 
 .toggle { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+/* the help switch: pressed while help on hover is on */
+.help-switch[aria-pressed="false"] { color: var(--muted); text-decoration: line-through; }
 select, input[type="text"], input[type="search"], textarea {
   font: inherit; color: var(--ink); background: var(--paper);
   border: 1px solid var(--edge); border-radius: 6px; padding: 4px 6px;

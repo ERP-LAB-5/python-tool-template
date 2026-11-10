@@ -79,6 +79,10 @@ Do these in order, and don't skip a layer the tool has:
    - **Button help:** `data-help="…"` on a button, not `title="…"`. Core shows
      it above the button after 600 ms (below when there is no room), so it
      never covers what the pointer is on; keyboard focus shows it too.
+     The header's **help** switch turns it off for someone who knows the
+     page (on by default, remembered per browser like the theme); a tool
+     that draws help of its own checks `core.helpOn()` or listens for the
+     `core:help` event, so one switch silences all of it.
 4. **MCP tool** (`mcp_server.py`): call pure engine functions in-process.
    Anything touching files goes through `web.ensure_server()` then
    `web.call(...)`. Write a docstring that says when to use the tool and what it
