@@ -64,6 +64,26 @@ def test_lifecycle_is_refused_from_off_the_machine(client, path):
     assert client.post(path, environ_base=FAR_AWAY).status_code == 403
 
 
+def test_another_host_name_is_refused(client):
+    # DNS rebinding: a page whose own name resolves to 127.0.0.1 reaches this
+    # server from the browser, but with its own name in the Host header
+    assert client.get("/api/health", headers={"Host": "evil.example:{{ port }}"}).status_code == 403
+    for host in ("127.0.0.1:{{ port }}", "localhost:{{ port }}", "[::1]:{{ port }}"):
+        assert client.get("/api/health", headers={"Host": host}).status_code == 200, host
+
+
+def test_a_write_from_another_site_is_refused(client):
+    r = client.post("/api/shutdown", environ_base=LOCAL, headers={"Origin": "https://evil.example"})
+    assert r.status_code == 403
+    assert "another site" in r.get_json()["errors"][0]
+
+
+def test_nobody_may_frame_the_page(client):
+    r = client.get("/")
+    assert r.headers["X-Frame-Options"] == "DENY"
+    assert "frame-ancestors 'none'" in r.headers["Content-Security-Policy"]
+
+
 def test_lifecycle_is_post_only(client):
     # a GET from a link in another tab must not stop the server
     assert client.get("/api/shutdown", environ_base=LOCAL).status_code == 405

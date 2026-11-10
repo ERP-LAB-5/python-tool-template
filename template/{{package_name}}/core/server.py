@@ -81,6 +81,32 @@ def create_app(import_name: str, **flask_kwargs) -> Flask:
         if client and request.path != "/api/mcp/heartbeat":
             agent.seen(client)
 
+    @app.before_request
+    def _this_machine_only():
+        # DNS rebinding: a web page can make its own name resolve to 127.0.0.1
+        # and then talk to this server as if it were the page's own origin.
+        # Binding to loopback does not stop that; checking the Host does. A
+        # write must also come from this page (or carry no Origin: an agent,
+        # a script).
+        host = (request.host or "").lower()
+        name = host.split("]")[0] + "]" if host.startswith("[") else host.rsplit(":", 1)[0]
+        allowed = {"127.0.0.1", "localhost", "[::1]"} | set(app.config.get("CORE_EXTRA_HOSTS", ()))
+        if name not in allowed:
+            abort(403, "this server answers to localhost only")
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            origin = request.headers.get("Origin")
+            if origin and origin.rstrip("/").lower() != f"{request.scheme}://{host}":
+                abort(403, "requests from another site are refused")
+
+    @app.after_request
+    def _no_framing(resp):
+        # nobody else's page may frame this one, or sniff a type into a script
+        resp.headers.setdefault("X-Frame-Options", "DENY")
+        resp.headers.setdefault("Content-Security-Policy", "frame-ancestors 'none'; base-uri 'none'; object-src 'none'")
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("Referrer-Policy", "no-referrer")
+        return resp
+
     @app.errorhandler(HTTPException)
     def _as_json(exc: HTTPException):
         # both spellings: "errors" is what core.js reads, "description" is
@@ -325,6 +351,10 @@ def serve(app: Flask, args: argparse.Namespace,
     say(f"  template      {template_info()['name']} {template_info()['version']}")
     where = "localhost" if args.host in ("", "0.0.0.0", "::") else args.host
     say(f"  listening on  http://{where}:{args.port}")
+
+    if on_a_network(args.host) and args.host not in ("", "0.0.0.0", "::"):
+        # started for the network on purpose: that host name is this server too
+        app.config["CORE_EXTRA_HOSTS"] = {args.host.lower()}
 
     if on_a_network(args.host):
         # Werkzeug's stock "development server" banner is replaced, not added
