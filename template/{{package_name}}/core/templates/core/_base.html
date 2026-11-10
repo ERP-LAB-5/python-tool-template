@@ -25,21 +25,21 @@
   {% block toolbar %}{% endblock %}
   <span class="spacer"></span>
   {% block toolbar_end %}{% endblock %}
-  <label class="toggle" title="themes this page only">
+  <label class="toggle" data-help="Light, dark, or as the system is. This browser only.">
     theme <select id="core-theme">
       <option value="auto">auto</option>
       <option value="light">light</option>
       <option value="dark">dark</option>
     </select>
   </label>
-  <button id="core-about" title="version, licence and the repository">About</button>
+  <button id="core-about" data-help="Version, licence, the repository, and whether an update is out.">About</button>
 {%- if with_mcp %}
-  <button id="core-connect" title="point an agent at this tool">
+  <button id="core-connect" data-help="Point an agent at this tool: the configuration to paste.">
     Agent<span id="core-agent-dot" class="agent-dot" hidden title="an agent is working here"></span>
   </button>
 {%- endif %}
-  <button id="core-restart" class="warn-btn" title="start the server again on the same port">Restart</button>
-  <button id="core-stop" class="stop" title="shut the local server down">Stop</button>
+  <button id="core-restart" class="warn-btn" data-help="Start the local server again on the same port; the page reloads.">Restart</button>
+  <button id="core-stop" class="stop" data-help="Shut the local server down. Files already written stay.">Stop</button>
 </header>
 
 {% block main %}{% endblock %}

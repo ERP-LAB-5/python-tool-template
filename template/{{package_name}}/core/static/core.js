@@ -6,7 +6,16 @@
  * Loaded by core/_base.html before the tool's own app.js, it wires the header
  * (theme, About, Restart, Stop) and exposes a few helpers as window.core:
  *
- *   core.api(method, path, payload)   fetch JSON; throws {status, data, errors}
+ *   core.api(method, path, payload, {quiet})
+ *                                     fetch JSON; throws {status, data, errors}.
+ *                                     Slower than a moment, it shows the
+ *                                     loading card, unless quiet (polling)
+ *   core.busy(+1 | -1)                the loading card for work that is not a
+ *                                     fetch (laying out thousands of tiles)
+ *   core.quiet(regex)                 GETs whose path matches never show it
+ *   core.setBusyLabel(text)           its word, e.g. translated
+ *   data-help="…"                     on any control: its help, shown ABOVE it
+ *                                     after a delay, so it never covers it
  *   core.dialog(title, html, onOpen)  one modal <dialog>, reused
  *   core.esc(text)                    HTML-escape
  *   core.toast(message, bad)
@@ -28,9 +37,52 @@
   const body = () => document.body.dataset;
   const title = () => body().title || document.title;
 
+  /* ---------------------------------------------------------- loading -- */
+
+  // "Loading…": a card in the middle of the screen when something the person
+  // started takes longer than a moment. Clicks pass through it, so it never
+  // blocks the page, and a modal dialog stays above it. Polling does not
+  // count: quiet GETs (core.quiet) and calls made with {quiet: true}.
+  const BUSY = { n: 0, timer: null, label: "Loading…" };
+  const QUIET = [/^\/api\/(health|version|services|agent)(\?|$)/];
+  const BUSY_AFTER_MS = 300;
+
+  function quiet(re) { QUIET.push(re); }
+  function setBusyLabel(text) { BUSY.label = String(text || "Loading…"); }
+
+  function busy(delta) {
+    BUSY.n = Math.max(0, BUSY.n + delta);
+    if (BUSY.n && !BUSY.timer) {
+      BUSY.timer = setTimeout(() => {
+        let el = $("#core-busy");
+        if (!el) {
+          el = document.createElement("div");
+          el.id = "core-busy";
+          el.setAttribute("role", "status");
+          el.setAttribute("aria-live", "polite");
+          el.innerHTML = '<div class="core-busy-card"><span class="core-hourglass" aria-hidden="true"></span>'
+            + '<span class="core-busy-word"></span><i class="core-busy-bar" aria-hidden="true"></i></div>';
+          document.body.appendChild(el);
+        }
+        el.querySelector(".core-busy-word").textContent = BUSY.label;
+        document.body.classList.add("is-busy");
+      }, BUSY_AFTER_MS);
+    } else if (!BUSY.n) {
+      clearTimeout(BUSY.timer);
+      BUSY.timer = null;
+      document.body.classList.remove("is-busy");
+    }
+  }
+
   /* ------------------------------------------------------------ fetch -- */
 
-  async function api(method, path, payload) {
+  async function api(method, path, payload, { quiet: still = false } = {}) {
+    const counted = !still && !(method === "GET" && QUIET.some((re) => re.test(path)));
+    if (counted) busy(1);
+    try { return await request(method, path, payload); } finally { if (counted) busy(-1); }
+  }
+
+  async function request(method, path, payload) {
     const opts = { method, headers: {} };
     if (payload !== undefined) {
       opts.headers["Content-Type"] = "application/json";
@@ -80,6 +132,92 @@
     el.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { el.hidden = true; }, bad ? 7000 : 3500);
+  }
+
+  /* ------------------------------------------------------------- help -- */
+
+  // data-help="…" on a button (or any control): its help appears ABOVE it
+  // after a short delay, below only when there is no room, so it never covers
+  // what the pointer is on. Keyboard focus shows it too; leaving, a click,
+  // scrolling or Escape hides it. Use it instead of title="…", which the
+  // browser draws over the control itself.
+  const HELP_AFTER_MS = 600;
+  const help = { timer: null, pending: null, shown: null };
+
+  function helpBox(target) {
+    // inside an open modal dialog the box must live in the dialog: the top
+    // layer is above every z-index
+    const host = target.closest("dialog[open]") || document.body;
+    let el = $("#core-help");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "core-help";
+      el.className = "core-help";
+      el.setAttribute("role", "tooltip");
+      el.hidden = true;
+    }
+    if (el.parentNode !== host) host.appendChild(el);
+    return el;
+  }
+
+  function showHelp(target) {
+    if (!target.isConnected) return;
+    const el = helpBox(target);
+    el.textContent = target.dataset.help;
+    el.style.left = "0px";
+    el.style.top = "0px";
+    el.hidden = false;
+    const r = target.getBoundingClientRect();
+    const b = el.getBoundingClientRect();
+    const gap = 8;
+    let top = r.top - b.height - gap;
+    if (top < 4) top = r.bottom + gap;
+    const left = Math.min(Math.max(4, r.left + r.width / 2 - b.width / 2), window.innerWidth - b.width - 4);
+    el.style.left = `${Math.max(4, left)}px`;
+    el.style.top = `${top}px`;
+    target.setAttribute("aria-describedby", "core-help");
+    help.shown = target;
+  }
+
+  function hideHelp() {
+    clearTimeout(help.timer);
+    help.timer = null;
+    help.pending = null;
+    if (help.shown && help.shown.getAttribute("aria-describedby") === "core-help") {
+      help.shown.removeAttribute("aria-describedby");
+    }
+    help.shown = null;
+    const el = $("#core-help");
+    if (el) el.hidden = true;
+  }
+
+  function helpTarget(ev) {
+    return ev.target && ev.target.closest ? ev.target.closest("[data-help]") : null;
+  }
+
+  function startHelp(target) {
+    if (!target || !target.dataset.help || target === help.pending || target === help.shown) return;
+    hideHelp();
+    help.pending = target;
+    help.timer = setTimeout(() => { help.pending = null; showHelp(target); }, HELP_AFTER_MS);
+  }
+
+  function wireHelp() {
+    document.addEventListener("pointerover", (ev) => {
+      if (ev.pointerType !== "touch") startHelp(helpTarget(ev));
+    });
+    document.addEventListener("pointerout", (ev) => {
+      const t = helpTarget(ev);
+      if (t && !t.contains(ev.relatedTarget)) hideHelp();
+    });
+    document.addEventListener("focusin", (ev) => {
+      const t = helpTarget(ev);
+      if (t && t.matches(":focus-visible")) startHelp(t);
+    });
+    document.addEventListener("focusout", hideHelp);
+    document.addEventListener("pointerdown", hideHelp, true);
+    document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") hideHelp(); });
+    window.addEventListener("scroll", hideHelp, true);
   }
 
   /* ------------------------------------------------------------ theme -- */
@@ -459,6 +597,7 @@
 
   function wire() {
     applyTheme(savedTheme());
+    wireHelp();
     const select = $("#core-theme");
     if (select) select.addEventListener("change", () => applyTheme(select.value));
     const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
@@ -472,7 +611,7 @@
   }
 
   window.core = {
-    api, dialog, esc, toast, applyTheme,
+    api, busy, quiet, setBusyLabel, dialog, esc, toast, applyTheme,
     aboutDialog, connectDialog, runUpdate, stopServer, restartServer,
     setLeavingGuard, defaultLeaving, onGone,
   };

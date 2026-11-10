@@ -9,9 +9,9 @@
 {% endraw %}
 {%- if with_workspace %}{% raw %}
 {% block toolbar %}
-  <button id="btn-new">New</button>
-  <button id="btn-save" class="primary">Save</button>
-  <button id="btn-delete" class="danger">Delete</button>
+  <button id="btn-new" data-help="Start an empty note.">New</button>
+  <button id="btn-save" class="primary" data-help="Save this note into the workspace folder.">Save</button>
+  <button id="btn-delete" class="danger" data-help="Delete this note from the workspace folder.">Delete</button>
 {% endblock %}
 {% endraw %}{% endif %}{% raw %}
 {% block main %}
@@ -33,7 +33,7 @@
     <label>Body <textarea id="f-body" rows="12"></textarea></label>
     <label>Tags <input type="text" id="f-tags" placeholder="comma, separated"></label>
     <div class="actions">
-      <button id="btn-summarise">Summarise</button>
+      <button id="btn-summarise" data-help="Word and line counts and the tags, from the same engine as the CLI.">Summarise</button>
       <span id="status" class="note"></span>
     </div>
     <pre id="summary" class="summary" hidden></pre>
