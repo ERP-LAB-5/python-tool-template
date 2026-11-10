@@ -16,6 +16,8 @@
  *   core.setBusyLabel(text)           its word, e.g. translated
  *   data-help="…"                     on any control: its help, shown ABOVE it
  *                                     after a delay, so it never covers it
+ *   core.setHelp(on) / core.helpOn()  the header's help switch: on by default,
+ *                                     off for who knows the page; this browser
  *   core.dialog(title, html, onOpen)  one modal <dialog>, reused
  *   core.esc(text)                    HTML-escape
  *   core.toast(message, bad)
@@ -142,7 +144,34 @@
   // scrolling or Escape hides it. Use it instead of title="…", which the
   // browser draws over the control itself.
   const HELP_AFTER_MS = 600;
-  const help = { timer: null, pending: null, shown: null };
+  const help = { timer: null, pending: null, shown: null, on: true };
+
+  // The header's help switch: on by default, so a newcomer sees it; someone
+  // who knows the page turns it off. Per browser, like the theme.
+  const helpKey = () => `${body().tool || "tool"}:help`;
+  const HELP_SWITCH = { on: "Help on hover is on: turn it off once you know the page.",
+                        off: "Help on hover is off. Click to turn it back on." };
+
+  function setHelp(on) {
+    help.on = on !== false;
+    if (!help.on) hideHelp();
+    document.documentElement.dataset.help = help.on ? "on" : "off";
+    try { localStorage.setItem(helpKey(), help.on ? "on" : "off"); } catch (_) { /* no storage */ }
+    const sw = $("#core-help-switch");
+    if (sw) {
+      sw.setAttribute("aria-pressed", String(help.on));
+      // its own explanation stays reachable when help is off: the browser's
+      // title, which is the one thing that still shows then
+      sw.dataset.help = HELP_SWITCH.on;
+      if (help.on) sw.removeAttribute("title"); else sw.title = HELP_SWITCH.off;
+    }
+    document.dispatchEvent(new CustomEvent("core:help", { detail: help.on }));
+    return help.on;
+  }
+
+  function savedHelp() {
+    try { return localStorage.getItem(helpKey()) !== "off"; } catch (_) { return true; }
+  }
 
   function helpBox(target) {
     // inside an open modal dialog the box must live in the dialog: the top
@@ -196,7 +225,7 @@
   }
 
   function startHelp(target) {
-    if (!target || !target.dataset.help || target === help.pending || target === help.shown) return;
+    if (!help.on || !target || !target.dataset.help || target === help.pending || target === help.shown) return;
     hideHelp();
     help.pending = target;
     help.timer = setTimeout(() => { help.pending = null; showHelp(target); }, HELP_AFTER_MS);
@@ -597,10 +626,12 @@
 
   function wire() {
     applyTheme(savedTheme());
+    setHelp(savedHelp());
     wireHelp();
     const select = $("#core-theme");
     if (select) select.addEventListener("change", () => applyTheme(select.value));
     const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
+    on("core-help-switch", () => setHelp(!help.on));
     on("core-about", aboutDialog);
     on("core-connect", connectDialog);
     on("core-stop", stopServer);
@@ -611,7 +642,7 @@
   }
 
   window.core = {
-    api, busy, quiet, setBusyLabel, dialog, esc, toast, applyTheme,
+    api, busy, quiet, setBusyLabel, setHelp, helpOn: () => help.on, dialog, esc, toast, applyTheme,
     aboutDialog, connectDialog, runUpdate, stopServer, restartServer,
     setLeavingGuard, defaultLeaving, onGone,
   };
