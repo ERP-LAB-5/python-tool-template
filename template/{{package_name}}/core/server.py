@@ -30,10 +30,11 @@ import argparse
 import ipaddress
 import os
 import re
+import socket
 import subprocess
 import sys
 import threading
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional, Set
 
 from flask import Blueprint, Flask, abort, jsonify, request
 from werkzeug.exceptions import HTTPException
@@ -333,6 +334,56 @@ def on_a_network(host: str) -> bool:
         return True                 # a name we cannot judge: assume the worst
 
 
+def _as_host(name: str) -> str:
+    """A name or address as the Host header carries it: lower case, an IPv6
+    address in brackets, without its zone."""
+    name = name.strip().lower().split("%")[0].strip("[]")
+    return f"[{name}]" if ":" in name else name
+
+
+def own_names() -> Set[str]:
+    """What other machines call this one: its host name (short, fully
+    qualified, and .local for mDNS) and its addresses. Read once, at start;
+    an address that changes later (DHCP) needs a restart."""
+    found: Set[str] = set()
+    try:
+        host = socket.gethostname()
+    except OSError:
+        host = ""
+    if host:
+        short = host.split(".")[0]
+        found |= {host, short, f"{short}.local"}
+        try:
+            found.add(socket.getfqdn())
+        except OSError:
+            pass
+        try:
+            found |= {str(info[4][0]) for info in socket.getaddrinfo(host, None)}
+        except OSError:
+            pass
+    # the address a route out would use, which is the one others reach; a UDP
+    # connect sends nothing
+    for family, probe in ((socket.AF_INET, "192.0.2.1"), (socket.AF_INET6, "2001:db8::1")):
+        try:
+            with socket.socket(family, socket.SOCK_DGRAM) as s:
+                s.connect((probe, 9))
+                found.add(str(s.getsockname()[0]))
+        except OSError:
+            pass
+    return {_as_host(n) for n in found if n} - {"", "0.0.0.0", "[::]"}
+
+
+def network_names(host: str) -> Set[str]:
+    """The Host names a server started with --host answers to beyond
+    localhost: none on loopback; on the network, the address it was given
+    and this computer's own names. A DNS-rebinding page arrives with a name
+    of its own, never one of these, and still gets 403."""
+    if not on_a_network(host):
+        return set()
+    named = {_as_host(host)} if host not in ("", "0.0.0.0", "::") else set()
+    return named | own_names()
+
+
 def serve(app: Flask, args: argparse.Namespace,
           lines: Iterable[str] = (), network_note: Optional[str] = None) -> int:
     """Print the startup block, warn if exposed, and serve until stopped.
@@ -352,9 +403,17 @@ def serve(app: Flask, args: argparse.Namespace,
     where = "localhost" if args.host in ("", "0.0.0.0", "::") else args.host
     say(f"  listening on  http://{where}:{args.port}")
 
-    if on_a_network(args.host) and args.host not in ("", "0.0.0.0", "::"):
-        # started for the network on purpose: that host name is this server too
-        app.config["CORE_EXTRA_HOSTS"] = {args.host.lower()}
+    if on_a_network(args.host):
+        # started for the network on purpose: the names other machines use for
+        # this one reach it too, and only those
+        names = network_names(args.host)
+        app.config["CORE_EXTRA_HOSTS"] = names
+        shown = sorted(names, key=lambda n: (n[0].isdigit() or n.startswith("["), n))
+        say(f"  answers to    localhost, {', '.join(shown[:6])}" + (" …" if len(shown) > 6 else ""))
+        # an address works from every machine; a bare name needs DNS or mDNS
+        others = sorted((n for n in shown if n[0].isdigit() and not n.startswith("127.")), key=lambda n: (not n.startswith(("192.168.", "10.", "172.")), n)) or [n for n in shown if not n[0].isdigit() and not n.startswith("[")]
+        if others:
+            say(f"  from another  http://{others[0]}:{args.port}  (any name above works)")
 
     if on_a_network(args.host):
         # Werkzeug's stock "development server" banner is replaced, not added
