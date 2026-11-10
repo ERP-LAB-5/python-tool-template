@@ -70,6 +70,15 @@ Do these in order, and don't skip a layer the tool has:
    `core.esc` for anything interpolated into HTML. If the page holds unsaved
    state, register `core.setLeavingGuard((verb, go) => …)` so Stop and Restart
    ask first.
+   - **Loading:** `core.api` shows a loading card in the middle of the screen
+     when a call takes longer than 300 ms; clicks pass through it. Polling
+     must not trigger it: register its GETs with `core.quiet(/^\/api\/jobs/)`
+     or pass `{quiet: true}`. Work that is not a fetch (laying out thousands
+     of tiles) wraps itself in `core.busy(1)` … `core.busy(-1)`.
+     `core.setBusyLabel(t("loading"))` translates the word.
+   - **Button help:** `data-help="…"` on a button, not `title="…"`. Core shows
+     it above the button after 600 ms (below when there is no room), so it
+     never covers what the pointer is on; keyboard focus shows it too.
 4. **MCP tool** (`mcp_server.py`): call pure engine functions in-process.
    Anything touching files goes through `web.ensure_server()` then
    `web.call(...)`. Write a docstring that says when to use the tool and what it
