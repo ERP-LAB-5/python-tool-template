@@ -44,7 +44,9 @@ def test_the_template_version_is_in_the_code_and_in_about(client):
     assert identity.TEMPLATE_VERSION and identity.TEMPLATE_VERSION != "unknown"
     answers = ROOT / ".copier-answers.yml"
     if answers.is_file():                     # a checkout: both must say the same
-        recorded = re.search(r"^_commit:\s*(\S+)", answers.read_text(encoding="utf-8"), re.M)
+        # an all-digit short hash is written quoted ('9382229'), or YAML would
+        # read it as a number; the quotes are not part of the version
+        recorded = re.search(r"""^_commit:\s*['"]?([^'"\s]+)""", answers.read_text(encoding="utf-8"), re.M)
         assert recorded and recorded.group(1) == identity.TEMPLATE_VERSION
     about = client.get("/api/version").get_json()["template"]
     assert about["version"] == identity.TEMPLATE_VERSION
